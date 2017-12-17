@@ -11,6 +11,9 @@ opts_chunk$set(tidy.opts=list(width.cutoff=70),tidy=TRUE, warning=FALSE, options
 
 library(Hmisc)
 library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(maps)
 
 ```
 
@@ -23,11 +26,12 @@ View(desc)
 View(traffic)
 table(with(data,state,year))
 
-hist(traffc$minage)
+hist(traffic$minage)
 length(unique(traffic$minage))
 
 hist(traffic$zerotol)
 length(unique(traffic$zerotol))
+
 ```
 #Question 1
 ****************
@@ -58,7 +62,7 @@ The 'zerotol' variable indicates if the state enacted a Zero Tolerance law for d
 The next two "bac" dummy variables indicate if the state's acceptable BAC is 0.08% or 0.10%.
 
 ####1.1.1.4 Perse
-Description?
+Several states have adopted "per se" laws which allows for suspension or revocation of driver's license for DUI or DWI cases.  
 
 ###1.1.2 Fatality Statistics
 
@@ -120,19 +124,20 @@ t = theme(plot.title = element_text(lineheight = 1, face = "bold"))
 plot.hist1  = ggplot(traffic, aes(x = totfat)) + scale_x_continuous(name ="Total Deaths") + h + t 
 plot.hist2  = ggplot(traffic, aes(x = nghtfat)) + scale_x_continuous(name ="Night Deaths") + h + t
 plot.hist3  = ggplot(traffic, aes(x = wkndfat)) + scale_x_continuous(name ="Weekend Deaths") + h + t + t
-plot.hist4  = ggplot(traffic, aes(x = totfatpvm)) + scale_x_continuous(name ="Total/Mile Driven") + h + t + t
+plot.hist4  = ggplot(traffic, aes(x = totfatpvm)) + scale_x_continuous(name ="Total/Mile Driven") + h + t 
 plot.hist5  = ggplot(traffic, aes(x = nghtfatpvm)) + scale_x_continuous(name ="Night/Mile Driven") + h + t + t
 plot.hist6  = ggplot(traffic, aes(x = wkndfatpvm)) + scale_x_continuous(name ="Weekend/Mile Driven") + h + t + t
 plot.hist7  = ggplot(traffic, aes(x = totfatrte)) + scale_x_continuous(name ="Total/Capita") + h + t + t
 plot.hist8  = ggplot(traffic, aes(x = nghtfatrte)) + scale_x_continuous(name ="Night/Capita") + h + t + t
-plot.hist9  = ggplot(traffic, aes(x = wkndfatrte)) + scale_x_continuous(name ="Weekend/Capita") + h + t + t
+plot.hist9  = ggplot(traffic, aes(x = wkndfatrte)) + scale_x_continuous(name ="Weekend/Capita") + h + t 
 grid.arrange(plot.hist1, plot.hist2, plot.hist3, plot.hist4, plot.hist5, plot.hist6, plot.hist7, 
              plot.hist8, plot.hist9, nrow = 3, ncol = 3, top = quote("Histograms"))  
 ```
 
 ```{r}
 library(maps)
-states = map_data('state')
+library(mapproj)
+states = map_data('state', projection = "albers", parameters = c(39, 45))
 statenames = unique(states$region[])
 statenames = c(statenames[1], "alaska", statenames[2:10], 
                'hawaii', statenames[11:length(statenames)])
@@ -140,6 +145,7 @@ states = states[states$region != "district of columbia",]
 states$state = match(states$region,statenames)
 
 traffic.map = merge(states, traffic, by="state")
+
 
 b = geom_boxplot(aes(fill = state, group = state)) 
 t = theme(plot.title = element_text(lineheight = 1, face = "bold"), 
@@ -159,7 +165,7 @@ plot.bp8 = ggplot(traffic.map, aes(state, nghtfatrte)) + b + t + c
 plot.bp9 = ggplot(traffic.map, aes(state, wkndfatrte)) + b + t + c
 grid.arrange(plot.bp1, plot.bp2, plot.bp3, plot.bp4, plot.bp5, plot.bp6, plot.bp7, 
              plot.bp8, plot.bp9, nrow = 3, ncol = 3) 
-?grid.arrange
+
 ```
 
 ```{r}
@@ -181,31 +187,37 @@ grid.arrange(plot.bp1, plot.bp2, plot.bp3, plot.bp4, plot.bp5, plot.bp6, plot.bp
 
 ```{r}
 
-
-plot.map1 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfat, group=group)
-plot.map2 = qplot(long, lat, data=traffic.map, geom="polygon", fill=nghtfat, group=group)
-plot.map3 = qplot(long, lat, data=traffic.map, geom="polygon", fill=wkndfat, group=group)
-plot.map4 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfatpvm, group=group)
-plot.map5 = qplot(long, lat, data=traffic.map, geom="polygon", fill=nghtfatpvm, group=group)
-plot.map6 = qplot(long, lat, data=traffic.map, geom="polygon", fill=wkndfatpvm, group=group)
-plot.map7 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfatrte, group=group)
-plot.map8 = qplot(long, lat, data=traffic.map, geom="polygon", fill=nghtfatrte, group=group)
-plot.map9 = qplot(long, lat, data=traffic.map, geom="polygon", fill=wkndfatrte, group=group)
-grid.arrange(plot.map1, plot.map2, plot.map3, plot.map4, plot.map5, plot.map6, plot.map7, 
-             plot.map8, plot.map9, nrow = 3, ncol = 3)
+#states = map_data('state', projection = "albers", parameters = c(39, 45))
+#statenames = unique(states$region[])
+#statenames = c(statenames[1], "alaska", statenames[2:10], 
+#               'hawaii', statenames[11:length(statenames)])
+#states = states[states$region != "district of columbia",]
+#states$state = match(states$region,statenames)
+#traffic.map = merge(states, traffic, by="state")
 
 no_var = !names(traffic.map) %in% c('year', "region", "subregion")
 traffic.state.agg = aggregate(traffic.map[, no_var], list(traffic.map$state), mean)
-head(traffic.state.agg)
-traffic.map = merge(states, traffic.state.agg, by="state")
-tail(traffic.map)
+traffic.map.agg = merge(states, traffic.state.agg, by="state")
+traffic.map.agg
 
-plot.map1 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfat, group=group)
-plot.map1
 
-?qplot
+plot.map1 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfat, group=group)
+plot.map2 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfat, group=group)
+plot.map3 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfat, group=group)
+plot.map4 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfatpvm, group=group)
+plot.map5 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfatpvm, group=group)
+plot.map6 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfatpvm, group=group)
+plot.map7 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfatrte, group=group)
+plot.map8 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfatrte, group=group)
+plot.map9 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfatrte, group=group)
+grid.arrange(plot.map1, plot.map2, plot.map3, plot.map4, plot.map5, plot.map6, plot.map7, 
+             plot.map8, plot.map9, nrow = 3, ncol = 3)
+
+
+
+
 #Tabular
-#?poisson
+
 describe(traffic$totfat)
 shapiro.test(log(traffic$totfat))
 ```
@@ -460,20 +472,36 @@ This is for continuous variables only.
 
 #Question 2
 ****************
-2. How is the our dependent variable of interest totfatrte defined? What is the average of this variable in
-each of the years in the time period covered in this dataset? Estimate a very simple regression model of
-totfatrte on dummy variables for the years 1981 through 2004. What does this model explain? Describe
-what you find in this model. Did driving become safer over this period? Please provide a detailed
-explanation.
+2. How is the our dependent variable of interest totfatrte defined? What is the average of this variable in each of the years in the time period covered in this dataset? Estimate a very simple regression model of totfatrte on dummy variables for the years 1981 through 2004. What does this model explain? Describe what you find in this model. Did driving become safer over this period? Please provide a detailed explanation.
 ****************
+
+
 
 ##2.1 Totfatrte Definition
 How is the our dependent variable of interest totfatrte defined?
+The $totfatrte$ is defined as fatalities per 100K population. 
 
 ##2.2 Totfatrte Average
-What is the average of this variable in each of the years in the time period covered in this dataset? 
+What is the average of this variable in each of the years in the time period covered in this dataset?   
+Over the years, we see a gradual decrease in the overall $totfatrte$ variable - from a high of 2.26 in 1980 to a low of 1.45 in 2004.  We do see two steep declines in the rate of fatalities (in the early 80's and then again between late 80's and early 90's),  since then we have only seen a gradual decrease.  It also appears like there are periods when we see an increase in the fatality rate  (albeit small) mid-80's,  '92-'95 and 2002.  
+
+
+
+```{r}
+dt = data.table(traffic)
+df_tot_by_year = dt %>% group_by(year) %>% summarise(totpop = sum(statepop), 
+                                    totfat = sum(totfat))
+df_tot_by_year$totfatrte = df_tot_by_year$totfat/df_tot_by_year$totpop*10000
+
+df_tot_by_year
+qplot(data = df_tot_by_year, x=year, y=totfatrte)
+
+
+```
 
 ##2.3 Totfatrte Regression
+
+
 
 ###2.3.1 Modeling
 Estimate a very simple regression model of totfatrte on dummy variables for the years 1981 through 2004. 

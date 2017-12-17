@@ -14,7 +14,8 @@ library(dplyr)
 library(ggplot2)
 library(gridExtra)
 library(maps)
-
+library(mapproj)
+library(viridis)
 ```
 
 **Read and Examine the data:  Load the data.** 
@@ -22,15 +23,15 @@ library(maps)
 ```{r}
 load("driving.RData")
 traffic = data
-View(desc)
-View(traffic)
-table(with(data,state,year))
+#View(desc)
+#View(traffic)
+#table(with(data,state,year))
 
-hist(traffic$minage)
-length(unique(traffic$minage))
+#hist(traffic$minage)
+#length(unique(traffic$minage))
 
-hist(traffic$zerotol)
-length(unique(traffic$zerotol))
+#hist(traffic$zerotol)
+#length(unique(traffic$zerotol))
 
 ```
 #Question 1
@@ -108,6 +109,7 @@ Boxplots of States by Years
 ######1.2.1.1.1.1 Anytime
 
 ```{r}
+#Poisson Distribution Reasonable?
 mean(traffic$totfat)
 var(traffic$totfat)
 
@@ -135,8 +137,7 @@ grid.arrange(plot.hist1, plot.hist2, plot.hist3, plot.hist4, plot.hist5, plot.hi
 ```
 
 ```{r}
-library(maps)
-states = map_data('state')
+states = map_data('state', projection = "albers", parameters = c(39, 45))
 statenames = unique(states$region[])
 statenames = c(statenames[1], "alaska", statenames[2:10], 
                'hawaii', statenames[11:length(statenames)])
@@ -144,6 +145,7 @@ states = states[states$region != "district of columbia",]
 states$state = match(states$region,statenames)
 
 traffic.map = merge(states, traffic, by="state")
+
 
 b = geom_boxplot(aes(fill = state, group = state)) 
 t = theme(plot.title = element_text(lineheight = 1, face = "bold"), 
@@ -163,13 +165,19 @@ plot.bp8 = ggplot(traffic.map, aes(state, nghtfatrte)) + b + t + c
 plot.bp9 = ggplot(traffic.map, aes(state, wkndfatrte)) + b + t + c
 grid.arrange(plot.bp1, plot.bp2, plot.bp3, plot.bp4, plot.bp5, plot.bp6, plot.bp7, 
              plot.bp8, plot.bp9, nrow = 3, ncol = 3) 
-#?grid.arrange
+
 ```
 
 ```{r}
 b = geom_boxplot(aes(fill = year, group = year)) 
-t = theme(plot.title = element_text(lineheight = 1, face = "bold"), legend.position = "none") 
+t = theme(plot.title = element_text(lineheight = 1, face = "bold"), 
+          legend.position = "none",
+          axis.text.x = element_blank(),
+          axis.title.x = element_blank()) 
+#install.packages("viridis")
 
+c = scale_fill_viridis()
+#?scale_color_viridis
 plot.bp1 = ggplot(traffic.map, aes(year, totfat)) + b + t + c
 plot.bp2 = ggplot(traffic.map, aes(year, nghtfat)) + b + t + c
 plot.bp3 = ggplot(traffic.map, aes(year, wkndfat)) + b + t + c
@@ -185,33 +193,40 @@ grid.arrange(plot.bp1, plot.bp2, plot.bp3, plot.bp4, plot.bp5, plot.bp6, plot.bp
 
 ```{r}
 
+states = map_data('state', projection = "albers", parameters = c(39, 45))
+statenames = unique(states$region[])
+statenames = c(statenames[1], "alaska", statenames[2:10], 
+               'hawaii', statenames[11:length(statenames)])
+states = states[states$region != "district of columbia",]
+states$state = match(states$region,statenames)
+traffic.map = merge(states, traffic, by="state")
 
-plot.map1 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfat, group=group)
-plot.map2 = qplot(long, lat, data=traffic.map, geom="polygon", fill=nghtfat, group=group)
-plot.map3 = qplot(long, lat, data=traffic.map, geom="polygon", fill=wkndfat, group=group)
-plot.map4 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfatpvm, group=group)
-plot.map5 = qplot(long, lat, data=traffic.map, geom="polygon", fill=nghtfatpvm, group=group)
-plot.map6 = qplot(long, lat, data=traffic.map, geom="polygon", fill=wkndfatpvm, group=group)
-plot.map7 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfatrte, group=group)
-plot.map8 = qplot(long, lat, data=traffic.map, geom="polygon", fill=nghtfatrte, group=group)
-plot.map9 = qplot(long, lat, data=traffic.map, geom="polygon", fill=wkndfatrte, group=group)
-grid.arrange(plot.map1, plot.map2, plot.map3, plot.map4, plot.map5, plot.map6, plot.map7, 
-             plot.map8, plot.map9, nrow = 3, ncol = 3)
-
-no_var = !names(traffic.map) %in% c('year', "region", "subregion")
+no_var = !names(traffic.map) %in% c('year', "region", "subregion", "lat", "long", "order", "group")
 traffic.state.agg = aggregate(traffic.map[, no_var], list(traffic.map$state), mean)
-head(traffic.state.agg)
-traffic.map = merge(states, traffic.state.agg, by="state")
-tail(traffic.map)
+traffic.map.agg = merge(states, traffic.state.agg, by="state")
 
-plot.map1 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfat, group=group)
-plot.map1
+t = theme(plot.title = element_text(lineheight = 1, face = "bold"), 
+          legend.position = "none",
+          axis.text.x = element_blank(),
+          axis.title.x = element_blank())
 
-?qplot
+plot.map1 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfat, group=group) + t
+plot.map2 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfat, group=group) + t
+plot.map2 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfat, group=group) + t
+plot.map3 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfat, group=group) + t
+plot.map4 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfatpvm, group=group) + t
+plot.map5 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfatpvm, group=group) + t
+plot.map6 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfatpvm, group=group) + t
+plot.map7 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfatrte, group=group) + t
+plot.map8 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfatrte, group=group) + t
+plot.map9 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfatrte, group=group) + t
+grid.arrange(plot.map1, plot.map2, plot.map3, plot.map4, plot.map5, plot.map6, plot.map7, 
+             plot.map8, plot.map9, nrow = 3, ncol = 3, top = quote("Choropleths"))
+
 #Tabular
-#?poisson
-describe(traffic$totfat)
-shapiro.test(log(traffic$totfat))
+
+#describe(traffic$totfat)
+#shapiro.test(log(traffic$totfat))
 ```
 ######1.2.1.1.1.2 Night Time
 ```{r}
@@ -467,8 +482,6 @@ This is for continuous variables only.
 2. How is the our dependent variable of interest totfatrte defined? What is the average of this variable in each of the years in the time period covered in this dataset? Estimate a very simple regression model of totfatrte on dummy variables for the years 1981 through 2004. What does this model explain? Describe what you find in this model. Did driving become safer over this period? Please provide a detailed explanation.
 ****************
 
-
-
 ##2.1 Totfatrte Definition
 How is the our dependent variable of interest totfatrte defined?
 The $totfatrte$ is defined as fatalities per 100K population. 
@@ -492,8 +505,6 @@ qplot(data = df_tot_by_year, x=year, y=totfatrte)
 ```
 
 ##2.3 Totfatrte Regression
-
-
 
 ###2.3.1 Modeling
 Estimate a very simple regression model of totfatrte on dummy variables for the years 1981 through 2004. 
