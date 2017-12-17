@@ -1,0 +1,558 @@
+---
+title: "Lab 5"
+author: "Ram Balasubramanian, John Kenney"
+date: "December 14, 2017"
+output: pdf_document
+---
+
+```{r include = FALSE}
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=70),tidy=TRUE, warning=FALSE, options(digits = 4))
+
+library(Hmisc)
+library(dplyr)
+
+```
+
+**Read and Examine the data:  Load the data.** 
+
+```{r}
+load("driving.RData")
+traffic = data
+View(desc)
+View(traffic)
+table(with(data,state,year))
+
+hist(traffc$minage)
+length(unique(traffic$minage))
+
+hist(traffic$zerotol)
+length(unique(traffic$zerotol))
+```
+#Question 1
+****************
+Provide a description of the basic structure of the dataset, as we have done throughout the semester. Be sure your explanation includes what the variable means and how it is coded.
+****************
+
+##1.1 Description of Dataset
+
+This data is structured as a long panel set, where each of the 48 states continental states are numbered alphabetically from 1 to 51, with 2, 9, and 12 missing (Alaska, Hawaii, District of Columbia).  Each state has associated with it 25 annual observations ranging from 1980 to 2004.  The year is both indicated as its own variable and represented as one of 25 dummy variables. Within each Year-by-State observation there are observations that describe the state's traffic laws, traffic fatalities, and population demographics.
+
+Variables that are coded as dummy (1 or 0) will often show a number between these two dichotomous options.  This indicates that the state's law was changed during this year and the variable was likely aggregated as the average of monthly observations.  The percentage indicates the amount of time for which the law was active.  For example, a value of 0.75 indicates that for three quarters of the year, the variable was True and for the other quarter, the variable was False.
+
+###1.1.1 Traffic Laws
+
+####1.1.1.1 Speed Limit
+There are six dummy variables starting with "sl", which indicate the speed limit mandated by the state for the year. The first four variables code speed limits in 5 mph increments from 55 to 75 mph.  The fifth variable "slnone" indicates there was no speed limit for the state that year.  The sixth variable 'sl70plus' indicates that either the speed limit was 70 mph or greater, or that there was no speed limit that year.  
+
+
+####1.1.1.2 Seatbelts
+The next variable "seatbelt" is categorical and describes the type of seat belt law that exists, "0" if no law, '1' if primary (no other violation required to give a ticket), "2" if secondary (another violation must have occurred for the officer to issue a seatbelt ticket).  There also exist two dummy variables starting with "sb", one for primary and the other for secondary.
+
+
+####1.1.1.3 Drinking
+The variables "minage", "zerotol", and 'bac' describe the state's approach to drinking laws.  The 'minage' variable is the state's legal drinking age for the year, taking on 12 distinct values from ranging from 18 to 21, with 21 making up the great majority of observations.  Non-integer observations indicate a year of 
+
+The 'zerotol' variable indicates if the state enacted a Zero Tolerance law for drinking, which makes it a criminal DUI offense for drivers under the age of 21 to drive with even a small amount of alcohol in their system.  This variable takes on 11 distinct values, ranging from 0 to 1, with zero and 1 making up the vast majority of observations
+
+The next two "bac" dummy variables indicate if the state's acceptable BAC is 0.08% or 0.10%.
+
+####1.1.1.4 Perse
+Description?
+
+###1.1.2 Fatality Statistics
+
+Fatality statistics are given for each State-by-Year observation and include gross totals as well as totals normalized by vehicle mile driven and per capita. 
+
+These statistics are reported in terms of the time of occurrence, which include fatalities over all times, fatalities at nighttime, and fatalities during the weekend.  
+
+####1.1.3 Demographics
+
+Observations also report a number of demographics specific to each state for each year reported.  These include the number of vehicle miles in billions by the state's population for the year (total and per capita), the state's percent unemployment, and the percentage of the state's population between 14 and 24, inclusive.
+
+##1.2 Exploratory Data Analysis
+****************
+Conduct a very thorough EDA, which should include both graphical and tabular techniques, on the dataset, including both the dependent variable totfatrte and the potential explanatory variables. 
+
+Remember, graphs must be well-labeled.
+
+You need to write a detailed narrative of your observations of your EDA. 
+
+Reminder: giving an "output dump" (i.e. providing a bunch of graphs and tables without description and hoping your audience will interpret them) will receive zero point in this exercise.
+****************
+
+###1.2.1 Univariate EDA
+
+####1.2.1.1 Dependent Variables - Fatalaties
+Visualizations:
+Ideas: 3 x 3 Histogram Matrix of overall distribution
+Heat Map by State 3 x 3 Geoplot 
+3 x 3 Time Series of Averages
+
+Statistics:
+describe()
+mean, mode, median
+distribution type estimator
+  Is it normal?
+  Is it poisson?
+  Chi Square?
+  
+Boxplots of States by Years
+
+#####1.2.1.1.1 Total
+
+######1.2.1.1.1.1 Anytime
+
+```{r}
+mean(traffic$totfat)
+var(traffic$totfat)
+
+```
+
+```{r}
+#Graphical
+
+h = geom_histogram(aes(y=..count..), 
+                 bins = 30, fill = "#99123F", 
+                 colour = "black")
+t = theme(plot.title = element_text(lineheight = 1, face = "bold")) 
+
+plot.hist1  = ggplot(traffic, aes(x = totfat)) + scale_x_continuous(name ="Total Deaths") + h + t 
+plot.hist2  = ggplot(traffic, aes(x = nghtfat)) + scale_x_continuous(name ="Night Deaths") + h + t
+plot.hist3  = ggplot(traffic, aes(x = wkndfat)) + scale_x_continuous(name ="Weekend Deaths") + h + t + t
+plot.hist4  = ggplot(traffic, aes(x = totfatpvm)) + scale_x_continuous(name ="Total/Mile Driven") + h + t + t
+plot.hist5  = ggplot(traffic, aes(x = nghtfatpvm)) + scale_x_continuous(name ="Night/Mile Driven") + h + t + t
+plot.hist6  = ggplot(traffic, aes(x = wkndfatpvm)) + scale_x_continuous(name ="Weekend/Mile Driven") + h + t + t
+plot.hist7  = ggplot(traffic, aes(x = totfatrte)) + scale_x_continuous(name ="Total/Capita") + h + t + t
+plot.hist8  = ggplot(traffic, aes(x = nghtfatrte)) + scale_x_continuous(name ="Night/Capita") + h + t + t
+plot.hist9  = ggplot(traffic, aes(x = wkndfatrte)) + scale_x_continuous(name ="Weekend/Capita") + h + t + t
+grid.arrange(plot.hist1, plot.hist2, plot.hist3, plot.hist4, plot.hist5, plot.hist6, plot.hist7, 
+             plot.hist8, plot.hist9, nrow = 3, ncol = 3, top = quote("Histograms"))  
+```
+
+```{r}
+library(maps)
+states = map_data('state')
+statenames = unique(states$region[])
+statenames = c(statenames[1], "alaska", statenames[2:10], 
+               'hawaii', statenames[11:length(statenames)])
+states = states[states$region != "district of columbia",]
+states$state = match(states$region,statenames)
+
+traffic.map = merge(states, traffic, by="state")
+
+b = geom_boxplot(aes(fill = state, group = state)) 
+t = theme(plot.title = element_text(lineheight = 1, face = "bold"), 
+          legend.position = "none", 
+          axis.text.x = element_blank(),
+          axis.title.x = element_blank()) 
+c = scale_fill_gradientn(limits=c(0,51), breaks=seq(0, 40, by=10), colours=rainbow(5))
+
+plot.bp1 = ggplot(traffic.map, aes(state, totfat)) + b + t + c
+plot.bp2 = ggplot(traffic.map, aes(state, nghtfat)) + b + t + c
+plot.bp3 = ggplot(traffic.map, aes(state, wkndfat)) + b + t + c
+plot.bp4 = ggplot(traffic.map, aes(state, totfatpvm)) + b + t + c
+plot.bp5 = ggplot(traffic.map, aes(state, nghtfatpvm)) + b + t + c
+plot.bp6 = ggplot(traffic.map, aes(state, wkndfatpvm)) + b + t + c
+plot.bp7 = ggplot(traffic.map, aes(state, totfatrte)) + b + t + c
+plot.bp8 = ggplot(traffic.map, aes(state, nghtfatrte)) + b + t + c
+plot.bp9 = ggplot(traffic.map, aes(state, wkndfatrte)) + b + t + c
+grid.arrange(plot.bp1, plot.bp2, plot.bp3, plot.bp4, plot.bp5, plot.bp6, plot.bp7, 
+             plot.bp8, plot.bp9, nrow = 3, ncol = 3) 
+?grid.arrange
+```
+
+```{r}
+b = geom_boxplot(aes(fill = year, group = year)) 
+t = theme(plot.title = element_text(lineheight = 1, face = "bold"), legend.position = "none") 
+
+plot.bp1 = ggplot(traffic.map, aes(year, totfat)) + b + t + c
+plot.bp2 = ggplot(traffic.map, aes(year, nghtfat)) + b + t + c
+plot.bp3 = ggplot(traffic.map, aes(year, wkndfat)) + b + t + c
+plot.bp4 = ggplot(traffic.map, aes(year, totfatpvm)) + b + t + c
+plot.bp5 = ggplot(traffic.map, aes(year, nghtfatpvm)) + b + t + c
+plot.bp6 = ggplot(traffic.map, aes(year, wkndfatpvm)) + b + t + c
+plot.bp7 = ggplot(traffic.map, aes(year, totfatrte)) + b + t + c
+plot.bp8 = ggplot(traffic.map, aes(year, nghtfatrte)) + b + t + c
+plot.bp9 = ggplot(traffic.map, aes(year, wkndfatrte)) + b + t + c
+grid.arrange(plot.bp1, plot.bp2, plot.bp3, plot.bp4, plot.bp5, plot.bp6, plot.bp7, 
+             plot.bp8, plot.bp9, nrow = 3, ncol = 3)
+```
+
+```{r}
+
+
+plot.map1 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfat, group=group)
+plot.map2 = qplot(long, lat, data=traffic.map, geom="polygon", fill=nghtfat, group=group)
+plot.map3 = qplot(long, lat, data=traffic.map, geom="polygon", fill=wkndfat, group=group)
+plot.map4 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfatpvm, group=group)
+plot.map5 = qplot(long, lat, data=traffic.map, geom="polygon", fill=nghtfatpvm, group=group)
+plot.map6 = qplot(long, lat, data=traffic.map, geom="polygon", fill=wkndfatpvm, group=group)
+plot.map7 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfatrte, group=group)
+plot.map8 = qplot(long, lat, data=traffic.map, geom="polygon", fill=nghtfatrte, group=group)
+plot.map9 = qplot(long, lat, data=traffic.map, geom="polygon", fill=wkndfatrte, group=group)
+grid.arrange(plot.map1, plot.map2, plot.map3, plot.map4, plot.map5, plot.map6, plot.map7, 
+             plot.map8, plot.map9, nrow = 3, ncol = 3)
+
+no_var = !names(traffic.map) %in% c('year', "region", "subregion")
+traffic.state.agg = aggregate(traffic.map[, no_var], list(traffic.map$state), mean)
+head(traffic.state.agg)
+traffic.map = merge(states, traffic.state.agg, by="state")
+tail(traffic.map)
+
+plot.map1 = qplot(long, lat, data=traffic.map, geom="polygon", fill=totfat, group=group)
+plot.map1
+
+?qplot
+#Tabular
+#?poisson
+describe(traffic$totfat)
+shapiro.test(log(traffic$totfat))
+```
+######1.2.1.1.1.2 Night Time
+```{r}
+#Graphical
+require(gridExtra)
+
+plot1 = ggplot(traffic, aes(x = nghtfat)) + 
+  geom_histogram(aes(y=..density..), 
+                 binwidth = 100, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Total Nighttime Traffic Fatalities",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+plot2 = ggplot(traffic, aes(x = log(nghtfat))) + 
+  geom_histogram(aes(y=..density..), 
+                 bins = 30, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Log Total Nighttime Traffic Fatalities",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, nrow = 3, ncol = 3)
+
+#Tabular
+#?poisson
+describe(traffic$totfat)
+shapiro.test(log(traffic$totfat))
+
+```
+######1.2.1.1.1.3 Weekend
+```{r}
+#Graphical
+ggplot(traffic, aes(x = wkndfat)) + 
+  geom_histogram(aes(y=..density..), 
+                 binwidth = 50, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Total Weekend Traffic Fatalities",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+#Graphical
+ggplot(traffic, aes(x = log(wkndfat))) + 
+  geom_histogram(aes(y=..density..), 
+                 binwidth = 0.2, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Log Total Weekend Traffic Fatalities",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+
+#Tabular
+#?poisson
+describe(traffic$totfat)
+shapiro.test(log(traffic$totfat))
+
+```
+#####1.2.1.1.2 Per Mile Driven
+######1.2.1.1.2.1 Anytime
+```{r}
+#Graphical
+ggplot(traffic, aes(x = totfatpvm)) + 
+  geom_histogram(aes(y=..density..), 
+                 binwidth = 0.1, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Total Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+ggplot(traffic, aes(x = log(totfatpvm))) + 
+  geom_histogram(aes(y=..density..), 
+                 binwidth = 0.075, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Log Total Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+
+#Tabular
+#?poisson
+describe(traffic$totfat)
+shapiro.test(log(traffic$totfat))
+
+```
+######1.2.1.1.2.2 Night Time
+```{r}
+#Graphical
+ggplot(traffic, aes(x = nghtfatpvm)) + 
+  geom_histogram(aes(y=..density..), 
+                 binwidth = 0.1, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Total Nighttime Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+ggplot(traffic, aes(x = log(nghtfatpvm))) + 
+  geom_histogram(aes(y=..density..), 
+                 binwidth = 0.075, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Log Total Nighttime Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+
+#Tabular
+#?poisson
+describe(traffic$totfat)
+shapiro.test(log(traffic$nghtfatpvm))
+
+```
+
+######1.2.1.1.2.3 Weekend
+```{r}
+#Graphical
+ggplot(traffic, aes(x = wkndfatpvm)) + 
+  geom_histogram(aes(y=..density..), 
+                 bins = 30, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Total Weekend Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+ggplot(traffic, aes(x = log(wkndfatpvm))) + 
+  geom_histogram(aes(y=..density..), 
+                 binwidth = 0.075, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Log Total Weekend Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+
+#Tabular
+#?poisson
+#poisson.test()
+describe(traffic$totfat)
+shapiro.test(log(traffic$totfat))
+```
+#####1.2.1.1.3 Per Capita
+
+######1.2.1.1.3.1 Anytime
+```{r}
+#Graphical
+ggplot(traffic, aes(x = totfatrte)) + 
+  geom_histogram(aes(y=..density..), 
+                 bins = 30, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Total Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+ggplot(traffic, aes(x = log(totfatrte))) + 
+  geom_histogram(aes(y=..density..), 
+                 bins = 30, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Log Total Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+
+#Tabular
+#?poisson
+
+```
+######1.2.1.1.3.2 Night Time
+```{r}
+#Graphical
+ggplot(traffic, aes(x = nghtfatrte)) + 
+  geom_histogram(aes(y=..density..), 
+                 bins = 30, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Total Nighttime Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+ggplot(traffic, aes(x = log(totfatrte))) + 
+  geom_histogram(aes(y=..density..), 
+                 bins = 30, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Log Total Nighttime Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+
+#Tabular
+describe(traffic$nghtfatrte)
+
+#?poisson
+
+```
+######1.2.1.1.3.3 Weekend
+```{r}
+#Graphical
+ggplot(traffic, aes(x = wkndfatrte)) + 
+  geom_histogram(aes(y=..density..), 
+                 binwidth = 0.1, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Total Weekend Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+ggplot(traffic, aes(x = log(totfatrte))) + 
+  geom_histogram(aes(y=..density..), 
+                 binwidth = 0.075, fill = "#99123F", 
+                 colour = "black") + 
+  ggtitle("Log Total Weekend Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
+  theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+ggplot(traffic, aes(x = sl55)) + geom_bar(aes(y=..count..), fill = "#1268AE", colour = "black")+ ggtitle("Speed Limit") + theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+#Tabular
+#?poisson
+describe(traffic$wkndfatrte)
+
+```
+
+####1.2.1.2 Independent (Random) Variables
+
+#####1.2.1.2.1 Traffic Laws
+######1.2.1.2.1.1 Speed Limit
+```{r}
+#Graphical
+ggplot(my.data, aes(party, birthyr)) + geom_boxplot(aes(fill = party)) + geom_jitter(size = .1) + ggtitle("Birth Year by Party Affiliation") + theme(plot.title = element_text(lineheight = 1, face = "bold"))
+
+
+#Tabular
+#?poisson
+
+```
+######1.2.1.2.1.2 Seatbelt
+######1.2.1.2.1.2.1 Primary
+######1.2.1.2.1.2.2 Secondary
+
+######1.2.1.2.1.3 Graduated Drivers License Law
+######1.2.1.2.1.4 Administrative License Revocation (Per Se)
+######1.2.1.2.1.5 Drinking Laws
+**1.2.1.2.1.5.1 Drinking Age** Ordinal
+**1.2.1.2.1.5.2 Zero Tolerance Laws** Binary
+**1.2.1.2.1.5.3 Blood Alchohol Content** Trinary
+
+#####1.2.1.2.2 State Demographics
+######1.2.1.2.2.1 Population
+######1.2.1.2.2.2 Unemployment 
+######1.2.1.2.2.3 Miles Driven
+######1.2.1.2.2.4 Population Ages 14-24
+######1.2.1.2.2.5 Vehicle Miles Driven
+######1.2.1.2.2.5.1 Total Miles
+######1.2.1.2.2.5.2 Miles Per Capita
+
+```{r}
+#Graphical
+
+#Tabular
+
+```
+
+###1.2.2 Bivariate EDA
+
+####1.2.2.1 Independent - Independent
+Is there any indication of multi-collinearity?
+
+####1.2.2.2 Dependent - Independent 
+#####1.2.2.2.1 First-Order Interactions
+#####1.2.2.2.2 Higher-Order Interactions
+This is for continuous variables only.
+
+#Question 2
+****************
+2. How is the our dependent variable of interest totfatrte defined? What is the average of this variable in
+each of the years in the time period covered in this dataset? Estimate a very simple regression model of
+totfatrte on dummy variables for the years 1981 through 2004. What does this model explain? Describe
+what you find in this model. Did driving become safer over this period? Please provide a detailed
+explanation.
+****************
+
+##2.1 Totfatrte Definition
+How is the our dependent variable of interest totfatrte defined?
+
+##2.2 Totfatrte Average
+What is the average of this variable in each of the years in the time period covered in this dataset? 
+
+##2.3 Totfatrte Regression
+
+###2.3.1 Modeling
+Estimate a very simple regression model of totfatrte on dummy variables for the years 1981 through 2004. 
+
+###2.3.2 Model Explanation
+What does this model explain? 
+
+###2.3.3 Model Findings
+Describe what you find in this model. Did driving become safer over this period? Please provide a detailed
+explanation.
+
+#Question 3
+****************
+3. Expand your model in Exercise 2 by adding variables bac08, bac10, perse, sbprim, sbsecon, sl70plus, gdl,
+perc14_24, unem, vehicmilespc, and perhaps transformations of some or all of these variables. Please
+explain carefully your rationale, which should be based on your EDA, behind any transformation you
+made. If no transformation is made, explain why transformation is not needed. How are the variables
+bac8 and bac10 defined? Interpret the coefficients on bac8 and bac10. Do per se laws have a negative
+effect on the fatality rate? What about having a primary seat belt law? (Note that if a law was enacted
+sometime within a year the fraction of the year is recorded in place of the zero-one indicator.)
+****************
+##3.1 Model Expansion
+Expand your model in Exercise 2 by adding variables bac08, bac10, perse, sbprim, sbsecon, sl70plus, gdl,
+perc14_24, unem, vehicmilespc, and perhaps transformations of some or all of these variables. 
+
+
+##3.2 Rationale
+Please explain carefully your rationale, which should be based on your EDA, behind any transformation you
+made. If no transformation is made, explain why transformation is not needed. 
+
+##3.3 BAC
+###3.3.1 Variable Definition
+How are the variables bac8 and bac10 defined? 
+
+###3.3.2 Coefficient Interpretation
+Interpret the coefficients on bac8 and bac10. 
+
+##3.4 Per Se Laws
+Do per se laws have a negative effect on the fatality rate? 
+
+##3.5 Primary Seat Belt
+What about having a primary seat belt law? (Note that if a law was enacted sometime within a year the fraction of the year is recorded in place of the zero-one indicator.)
+
+#Question 4
+****************
+4. Reestimate the model from Exercise 3 using a fixed effects (at the state level) model. How do the
+coefficients on bac08, bac10, perse, and sbprim compare with the pooled OLS estimates? Which set of
+estimates do you think is more reliable? What assumptions are needed in each of these models? Are
+these assumptions reasonable in the current context?
+****************
+
+##4.1 Fixed Effect Modeling
+Reestimate the model from Exercise 3 using a fixed effects (at the state level) model. 
+
+##4.2 Coefficient Comparison
+How do the coefficients on bac08, bac10, perse, and sbprim compare with the pooled OLS estimates? 
+
+##4.3 Assessment of Reliability
+Which set of estimates do you think is more reliable? 
+
+##4.4 Modeling Assumptions
+What assumptions are needed in each of these models? Are these assumptions reasonable in the current context?
+
+
+#Question 5
+****************
+5. Would you prefer to use a random effects model instead of the fixed effects model you build in Exercise
+4? Why? Why not?
+****************
+
+#Question 6
+****************
+6. Suppose that vehicmilespc, the number of miles driven per capita, increases by 1,000. Using the FE
+estimates, what is the estimated effect on totfatrte? Be sure to interpret the estimate as if explaining
+to a layperson.
+****************
+
+#Question 7
+****************
+7. If there is serial correlation or heteroskedasticity in the idiosyncratic errors of the model, what would
+be the consequences on the coefficient estimates and their standard errors?
+****************
