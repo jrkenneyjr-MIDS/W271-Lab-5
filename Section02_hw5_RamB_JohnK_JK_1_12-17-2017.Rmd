@@ -433,7 +433,7 @@ describe(traffic$wkndfatrte)
 ######1.2.1.2.1.1 Speed Limit
 ```{r}
 #Graphical
-ggplot(my.data, aes(party, birthyr)) + geom_boxplot(aes(fill = party)) + geom_jitter(size = .1) + ggtitle("Birth Year by Party Affiliation") + theme(plot.title = element_text(lineheight = 1, face = "bold"))
+#ggplot(my.data, aes(party, birthyr)) + geom_boxplot(aes(fill = party)) + geom_jitter(size = .1) + ggtitle("Birth Year by Party Affiliation") + theme(plot.title = element_text(lineheight = 1, face = "bold"))
 
 
 #Tabular
@@ -449,16 +449,44 @@ ggplot(my.data, aes(party, birthyr)) + geom_boxplot(aes(fill = party)) + geom_ji
 ######1.2.1.2.1.5 Drinking Laws
 **1.2.1.2.1.5.1 Drinking Age** Ordinal
 **1.2.1.2.1.5.2 Zero Tolerance Laws** Binary
+
 **1.2.1.2.1.5.3 Blood Alchohol Content** Trinary
+
 
 #####1.2.1.2.2 State Demographics
 ######1.2.1.2.2.1 Population
 ######1.2.1.2.2.2 Unemployment 
+```{r}
+#Graphical
+h = geom_histogram(aes(y=..count..), 
+                 bins = 40, fill = "#99123F", 
+                 colour = "black")
+t = theme(plot.title = element_text(lineheight = 1, face = "bold")) 
+
+ggplot(traffic, aes(x = unem)) + h + t 
+       
+
+```
+
 ######1.2.1.2.2.3 Miles Driven
 ######1.2.1.2.2.4 Population Ages 14-24
 ######1.2.1.2.2.5 Vehicle Miles Driven
 ######1.2.1.2.2.5.1 Total Miles
 ######1.2.1.2.2.5.2 Miles Per Capita
+
+
+```{r}
+#Graphical
+h = geom_histogram(aes(y=..count..), 
+                 bins = 40, fill = "#99123F", 
+                 colour = "black")
+t = theme(plot.title = element_text(lineheight = 1, face = "bold")) 
+
+ggplot(traffic, aes(x = vehicmilespc)) + h + t 
+
+```
+
+
 
 ```{r}
 #Graphical
@@ -474,6 +502,17 @@ Is there any indication of multi-collinearity?
 
 ####1.2.2.2 Dependent - Independent 
 #####1.2.2.2.1 First-Order Interactions
+###### Fatality Rate vs. Unemployment, Perc14_24, vehicmilespc
+None of the bivariate charts show any patterns that *strongly* suggest that we should transform one variable or the other.  
+
+
+```{r}
+ggplot(traffic, aes(x=unem, y=totfatrte)) + geom_point()
+ggplot(traffic, aes(x=perc14_24, y=totfatrte)) + geom_point()
+ggplot(traffic, aes(x=vehicmilespc, y=totfatrte)) + geom_point()
+
+```
+
 #####1.2.2.2.2 Higher-Order Interactions
 This is for continuous variables only.
 
@@ -488,65 +527,113 @@ The $totfatrte$ is defined as fatalities per 100K population.
 
 ##2.2 Totfatrte Average
 What is the average of this variable in each of the years in the time period covered in this dataset?   
-Over the years, we see a gradual decrease in the overall $totfatrte$ variable - from a high of 2.26 in 1980 to a low of 1.45 in 2004.  We do see two steep declines in the rate of fatalities (in the early 80's and then again between late 80's and early 90's),  since then we have only seen a gradual decrease.  It also appears like there are periods when we see an increase in the fatality rate  (albeit small) mid-80's,  '92-'95 and 2002.  
+```{r}
+avg_by_year = dt%>%group_by
+qplot(x=year, y=totfatrte, data=avg_by_year)
+```
+
+Over the years, we see a gradual decrease in the average $totfatrte$ variable - from a high of 25.49 in 1980 to a low of 16.73in 2004.  We do see two steep declines in the rate of fatalities (in the early 80's and then again between late 80's and early 90's),  since then we have only seen a gradual decrease.  It also appears like there are periods when we see an increase in the average fatality rate  (albeit small) mid-80's,  '92-'95 and 2002.  
 
 
+
+##2.3 Totfatrte Regression  
 
 ```{r}
-dt = data.table(traffic)
-df_tot_by_year = dt %>% group_by(year) %>% summarise(totpop = sum(statepop), 
-                                    totfat = sum(totfat))
-df_tot_by_year$totfatrte = df_tot_by_year$totfat/df_tot_by_year$totpop*10000
-
-df_tot_by_year
-qplot(data = df_tot_by_year, x=year, y=totfatrte)
-
+avg_by_year =aggregate(totfatrte~year, traffic, mean)
 
 ```
 
-##2.3 Totfatrte Regression
 
 ###2.3.1 Modeling
 Estimate a very simple regression model of totfatrte on dummy variables for the years 1981 through 2004. 
+```{r}
+lm.mod = lm(totfatrte~d81+d82+d83+d84+d85+d86+d87+d88+d89+
+                      d90+d91+d92+d93+d94+d95+d96+d97+d98+d99+
+                      d00+d01+d02+d03+d04, data=traffic)
+summary(lm.mod)
+
+```
 
 ###2.3.2 Model Explanation
 What does this model explain? 
+The regression explains how  fatality rates in each year (averaged across the 48 states) has changed over time.
 
 ###2.3.3 Model Findings
-Describe what you find in this model. Did driving become safer over this period? Please provide a detailed
-explanation.
+Describe what you find in this model. Did driving become safer over this period? Please provide a detailed explanation.  
+The fitted regression equation is $avg_fatality = 25.49 + (-1.824)\cdot d81+ (-4.552) \cdot d82 + \cdots + + (-8.766) \cdot d04 $  
+All the estimated coefficients are statistically significant at 5%, (except for the one for 1981, which suggests that there was a lot of variability in fatality rates across the 48 states in 1981). 
+The intercept of the regression model is the average fatality rate for 1980. All other coefficients measure how the average fatality compares for the year (represented by the dummy variable) versus 1980.  Each coefficients is negative, which means that the average fatality rate  each year has improved relative to 1980.  The coeff's are also increasingly negative for the most part - represting a trend that we see in the graph above.  *Based on this, we would say that driving (as measured by fatality rate per 100K population) has gotten safer over the years 1980-2004 on average in the United States.*  There are several caveats to that statement - we have not accounted for any other factors in this assessment; in addition the target variable $totfatrte$ is a simple average of the fatality rates of each state (not weighted by the population of each state).  
+
 
 #Question 3
 ****************
-3. Expand your model in Exercise 2 by adding variables bac08, bac10, perse, sbprim, sbsecon, sl70plus, gdl,
-perc14_24, unem, vehicmilespc, and perhaps transformations of some or all of these variables. Please
-explain carefully your rationale, which should be based on your EDA, behind any transformation you
-made. If no transformation is made, explain why transformation is not needed. How are the variables
-bac8 and bac10 defined? Interpret the coefficients on bac8 and bac10. Do per se laws have a negative
-effect on the fatality rate? What about having a primary seat belt law? (Note that if a law was enacted
-sometime within a year the fraction of the year is recorded in place of the zero-one indicator.)
-****************
+3. Expand your model in Exercise 2 by adding variables bac08, bac10, perse, sbprim, sbsecon, sl70plus, gdl, perc14_24, unem, vehicmilespc, and perhaps transformations of some or all of these variables. Please explain carefully your rationale, which should be based on your EDA, behind any transformation you made. If no transformation is made, explain why transformation is not needed. How are the variables bac8 and bac10 defined? Interpret the coefficients on bac8 and bac10. Do per se laws have a negative effect on the fatality rate? What about having a primary seat belt law? (Note that if a law was enacted sometime within a year the fraction of the year is recorded in place of the zero-one indicator.)****************
+
 ##3.1 Model Expansion
-Expand your model in Exercise 2 by adding variables bac08, bac10, perse, sbprim, sbsecon, sl70plus, gdl,
-perc14_24, unem, vehicmilespc, and perhaps transformations of some or all of these variables. 
+Expand your model in Exercise 2 by adding variables bac08, bac10, perse, sbprim, sbsecon, sl70plus, gdl, perc14_24, unem, vehicmilespc, and perhaps transformations of some or all of these variables.
+
+
+
 
 
 ##3.2 Rationale
-Please explain carefully your rationale, which should be based on your EDA, behind any transformation you
-made. If no transformation is made, explain why transformation is not needed. 
+Please explain carefully your rationale, which should be based on your EDA, behind any transformation you made. If no transformation is made, explain why transformation is not needed. 
+
+In most instances we can expect there to be a lag between when certain types of laws are enacted and when they impact  change in behavior.  Given that, we suggest transforming the variables that are essentially binary in nature (whether a law was in effect or not) to be strictly binary (so if it was in effect for less than 1/2 the year, we will code is 0 and 1 otherwise).  
+
+As for the other variables - $perc14_24, unem, vehicmilespc$, they are all already expressed as normalized metrics (where the denominator is some measure of the population, either as per 100 people or per person).  Since our dependent variable is fatalities per 100K people; and the 
+
+```{r}
+traffic$bac08bin = ifelse(traffic$bac08<0.5,0,1)
+traffic$bac10bin = ifelse(traffic$bac10<=0.5,0,1)
+traffic$persebin = ifelse(traffic$perse<0.5,0,1)
+traffic$sbprimbin = ifelse(traffic$sbprim<0.5,0,1)
+traffic$sbseconbin = ifelse(traffic$sbsecon<0.5,0,1)
+traffic$sl70plusbin = ifelse(traffic$sl70plus<0.5,0,1)
+traffic$gdlbin = ifelse(traffic$gdl<0.5,0,1)
+
+traffic$bac0810bin = traffic$bac08bin + traffic$bac10bin
+describe(traffic$bac0810bin)
+
+```
+
+
+```{r}
+
+lm.mod2 = lm(totfatrte~bac08bin+bac10bin+persebin+sbprimbin+sbseconbin+sl70plusbin+gdlbin+
+                      perc14_24+unem+vehicmilespc+
+                      d81+d82+d83+d84+d85+d86+d87+d88+d89+
+                      d90+d91+d92+d93+d94+d95+d96+d97+d98+d99+
+                      d00+d01+d02+d03+d04, data=traffic)
+summary(lm.mod2)
+plot(lm.mod2)
+```
+
+
+
+
 
 ##3.3 BAC
 ###3.3.1 Variable Definition
-How are the variables bac8 and bac10 defined? 
+How are the variables bac8 and bac10 defined?   
+The BAC (blood alcohol content) is a measure used to determine if someone is driving under the influence of alcohol.  For $bac10$ the threshold is 0.10 and $bac8$ represents a threshold of 0.08.  
+
 
 ###3.3.2 Coefficient Interpretation
 Interpret the coefficients on bac8 and bac10. 
+The coefficient on bac08 is -2.13 and the coefficient for bac10 is -1.12; The mathematical  interpretation of the coefficients in the regression would suggest that all else being equal, a state that has a threshold of 0.08 would have a lower $totfatrte$ than a state that has a threshold of 0.1 because the coeff for bac08 is -2.13 and the coeff for bac10 is -1.12.  But this model structure  also suggests that the effect of having BOTH thresholds (which is practically meaningless since having a threshold of 0.08 is inclusive of 0.1) is more than just having one of them - a nonsensical conclusion.  
 
 ##3.4 Per Se Laws
 Do per se laws have a negative effect on the fatality rate? 
+According to the linear regression model - YES, perse laws have a negative effect on $totfatrte$. All else being equal, the existence of perse laws lowers $totfatrte$ by -6.12 compared to when these laws do not exist.  
+
 
 ##3.5 Primary Seat Belt
 What about having a primary seat belt law? (Note that if a law was enacted sometime within a year the fraction of the year is recorded in place of the zero-one indicator.)
+Per the model specification, the coefficients for both seatbelt law types (primary and secondary) are not significantly different from zero, so we interpret it as having no effect on $totfatrte$.  
+
+
+
 
 #Question 4
 ****************
