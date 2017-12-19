@@ -192,7 +192,6 @@ grid.arrange(plot.bp1, plot.bp2, plot.bp3, plot.bp4, plot.bp5, plot.bp6, plot.bp
 ```
 
 ```{r}
-
 states = map_data('state', projection = "albers", parameters = c(39, 45))
 statenames = unique(states$region[])
 statenames = c(statenames[1], "alaska", statenames[2:10], 
@@ -207,298 +206,39 @@ traffic.map.agg = merge(states, traffic.state.agg, by="state")
 
 t = theme(plot.title = element_text(lineheight = 1, face = "bold"), 
           legend.position = "none",
-          axis.text.x = element_blank(),
-          axis.title.x = element_blank())
+          axis.text.y = element_blank(),
+          axis.title.y = element_blank())
 
-plot.map1 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfat, group=group) + t
-plot.map2 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfat, group=group) + t
-plot.map2 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfat, group=group) + t
-plot.map3 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfat, group=group) + t
-plot.map4 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfatpvm, group=group) + t
-plot.map5 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfatpvm, group=group) + t
-plot.map6 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfatpvm, group=group) + t
-plot.map7 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfatrte, group=group) + t
-plot.map8 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfatrte, group=group) + t
-plot.map9 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfatrte, group=group) + t
+plot.map1 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfat, group=group) + labs(x = "Total") + t
+plot.map2 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfat, group=group) + labs(x = "Night") + t
+plot.map3 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfat, group=group) + labs(x = "Weekend") + t
+plot.map4 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfatpvm, group=group) + labs(x = "Total/Mile Driven") + t
+plot.map5 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfatpvm, group=group) + labs(x = "Night/Mile Driven") + t
+plot.map6 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfatpvm, group=group) + labs(x = "Weekend/Mile Driven") + t
+plot.map7 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=totfatrte, group=group) + labs(x = "Total/Capita") + t
+plot.map8 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=nghtfatrte, group=group) + labs(x = "Night/Capita") + t
+plot.map9 = qplot(long, lat, data=traffic.map.agg, geom="polygon", fill=wkndfatrte, group=group) + labs(x = "Weekend/Capita") + t
 grid.arrange(plot.map1, plot.map2, plot.map3, plot.map4, plot.map5, plot.map6, plot.map7, 
-             plot.map8, plot.map9, nrow = 3, ncol = 3, top = quote("Choropleths"))
+             plot.map8, plot.map9, nrow = 3, ncol = 3, top = quote("Average Traffic Fatalaties 1980-2004"))
 
 #Tabular
 
 #describe(traffic$totfat)
 #shapiro.test(log(traffic$totfat))
 ```
-######1.2.1.1.1.2 Night Time
-```{r}
-#Graphical
-require(gridExtra)
-
-plot1 = ggplot(traffic, aes(x = nghtfat)) + 
-  geom_histogram(aes(y=..density..), 
-                 binwidth = 100, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Total Nighttime Traffic Fatalities",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-plot2 = ggplot(traffic, aes(x = log(nghtfat))) + 
-  geom_histogram(aes(y=..density..), 
-                 bins = 30, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Log Total Nighttime Traffic Fatalities",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, nrow = 3, ncol = 3)
-
-#Tabular
-#?poisson
-describe(traffic$totfat)
-shapiro.test(log(traffic$totfat))
-
-```
-######1.2.1.1.1.3 Weekend
-```{r}
-#Graphical
-ggplot(traffic, aes(x = wkndfat)) + 
-  geom_histogram(aes(y=..density..), 
-                 binwidth = 50, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Total Weekend Traffic Fatalities",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-#Graphical
-ggplot(traffic, aes(x = log(wkndfat))) + 
-  geom_histogram(aes(y=..density..), 
-                 binwidth = 0.2, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Log Total Weekend Traffic Fatalities",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-
-#Tabular
-#?poisson
-describe(traffic$totfat)
-shapiro.test(log(traffic$totfat))
-
-```
-#####1.2.1.1.2 Per Mile Driven
-######1.2.1.1.2.1 Anytime
-```{r}
-#Graphical
-ggplot(traffic, aes(x = totfatpvm)) + 
-  geom_histogram(aes(y=..density..), 
-                 binwidth = 0.1, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Total Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-ggplot(traffic, aes(x = log(totfatpvm))) + 
-  geom_histogram(aes(y=..density..), 
-                 binwidth = 0.075, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Log Total Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-
-#Tabular
-#?poisson
-describe(traffic$totfat)
-shapiro.test(log(traffic$totfat))
-
-```
-######1.2.1.1.2.2 Night Time
-```{r}
-#Graphical
-ggplot(traffic, aes(x = nghtfatpvm)) + 
-  geom_histogram(aes(y=..density..), 
-                 binwidth = 0.1, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Total Nighttime Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-ggplot(traffic, aes(x = log(nghtfatpvm))) + 
-  geom_histogram(aes(y=..density..), 
-                 binwidth = 0.075, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Log Total Nighttime Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-
-#Tabular
-#?poisson
-describe(traffic$totfat)
-shapiro.test(log(traffic$nghtfatpvm))
-
-```
-
-######1.2.1.1.2.3 Weekend
-```{r}
-#Graphical
-ggplot(traffic, aes(x = wkndfatpvm)) + 
-  geom_histogram(aes(y=..density..), 
-                 bins = 30, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Total Weekend Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-ggplot(traffic, aes(x = log(wkndfatpvm))) + 
-  geom_histogram(aes(y=..density..), 
-                 binwidth = 0.075, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Log Total Weekend Traffic Fatalities Per Mile Driven",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-
-#Tabular
-#?poisson
-#poisson.test()
-describe(traffic$totfat)
-shapiro.test(log(traffic$totfat))
-```
-#####1.2.1.1.3 Per Capita
-
-######1.2.1.1.3.1 Anytime
-```{r}
-#Graphical
-ggplot(traffic, aes(x = totfatrte)) + 
-  geom_histogram(aes(y=..density..), 
-                 bins = 30, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Total Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-ggplot(traffic, aes(x = log(totfatrte))) + 
-  geom_histogram(aes(y=..density..), 
-                 bins = 30, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Log Total Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-
-#Tabular
-#?poisson
-
-```
-######1.2.1.1.3.2 Night Time
-```{r}
-#Graphical
-ggplot(traffic, aes(x = nghtfatrte)) + 
-  geom_histogram(aes(y=..density..), 
-                 bins = 30, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Total Nighttime Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-ggplot(traffic, aes(x = log(totfatrte))) + 
-  geom_histogram(aes(y=..density..), 
-                 bins = 30, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Log Total Nighttime Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-
-#Tabular
-describe(traffic$nghtfatrte)
-
-#?poisson
-
-```
-######1.2.1.1.3.3 Weekend
-```{r}
-#Graphical
-ggplot(traffic, aes(x = wkndfatrte)) + 
-  geom_histogram(aes(y=..density..), 
-                 binwidth = 0.1, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Total Weekend Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-ggplot(traffic, aes(x = log(totfatrte))) + 
-  geom_histogram(aes(y=..density..), 
-                 binwidth = 0.075, fill = "#99123F", 
-                 colour = "black") + 
-  ggtitle("Log Total Weekend Traffic Fatalities Per Capita",subtitle = "State-Level Observations from 1980 to 2004") +
-  theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-ggplot(traffic, aes(x = sl55)) + geom_bar(aes(y=..count..), fill = "#1268AE", colour = "black")+ ggtitle("Speed Limit") + theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-#Tabular
-#?poisson
-describe(traffic$wkndfatrte)
-
-```
-
-####1.2.1.2 Independent (Random) Variables
-
-#####1.2.1.2.1 Traffic Laws
-######1.2.1.2.1.1 Speed Limit
-```{r}
-#Graphical
-#ggplot(my.data, aes(party, birthyr)) + geom_boxplot(aes(fill = party)) + geom_jitter(size = .1) + ggtitle("Birth Year by Party Affiliation") + theme(plot.title = element_text(lineheight = 1, face = "bold"))
-
-
-#Tabular
-#?poisson
-
-```
-######1.2.1.2.1.2 Seatbelt
-######1.2.1.2.1.2.1 Primary
-######1.2.1.2.1.2.2 Secondary
-
-######1.2.1.2.1.3 Graduated Drivers License Law
-######1.2.1.2.1.4 Administrative License Revocation (Per Se)
-######1.2.1.2.1.5 Drinking Laws
-**1.2.1.2.1.5.1 Drinking Age** Ordinal
-**1.2.1.2.1.5.2 Zero Tolerance Laws** Binary
-
-**1.2.1.2.1.5.3 Blood Alchohol Content** Trinary
-
-
-#####1.2.1.2.2 State Demographics
-######1.2.1.2.2.1 Population
-######1.2.1.2.2.2 Unemployment 
-```{r}
-#Graphical
-h = geom_histogram(aes(y=..count..), 
-                 bins = 40, fill = "#99123F", 
-                 colour = "black")
-t = theme(plot.title = element_text(lineheight = 1, face = "bold")) 
-
-ggplot(traffic, aes(x = unem)) + h + t 
-       
-
-```
-
-######1.2.1.2.2.3 Miles Driven
-######1.2.1.2.2.4 Population Ages 14-24
-######1.2.1.2.2.5 Vehicle Miles Driven
-######1.2.1.2.2.5.1 Total Miles
-######1.2.1.2.2.5.2 Miles Per Capita
-
-
-```{r}
-#Graphical
-h = geom_histogram(aes(y=..count..), 
-                 bins = 40, fill = "#99123F", 
-                 colour = "black")
-t = theme(plot.title = element_text(lineheight = 1, face = "bold")) 
-
-ggplot(traffic, aes(x = vehicmilespc)) + h + t 
-
-```
-
-
-
-```{r}
-#Graphical
-
-#Tabular
-
-```
-
 ###1.2.2 Bivariate EDA
 
 ####1.2.2.1 Independent - Independent
 Is there any indication of multi-collinearity?
+
+```{r}
+sum_by_year = aggregate(traffic[,c('bac08','bac10','sbprim','sbsecon','perse','sl70plus','gdl')], traffic['year'], FUN=sum)
+sum_by_state = aggregate(traffic[,c('bac08','bac10','sbprim','sbsecon','perse','sl70plus','gdl')], traffic['state'], FUN=sum)
+#install.packages("GGally")
+library(GGally)
+ggpairs(sum_by_year)
+ggpairs(sum_by_state)
+```
 
 ####1.2.2.2 Dependent - Independent 
 #####1.2.2.2.1 First-Order Interactions
@@ -510,6 +250,21 @@ None of the bivariate charts show any patterns that *strongly* suggest that we s
 ggplot(traffic, aes(x=unem, y=totfatrte)) + geom_point()
 ggplot(traffic, aes(x=perc14_24, y=totfatrte)) + geom_point()
 ggplot(traffic, aes(x=vehicmilespc, y=totfatrte)) + geom_point()
+
+modfit1 = lm(totfatrte~unem, traffic)
+par(mfrow = c(2,2))
+plot(modfit1)
+summary(modfit1)
+
+modfit2 = lm(totfatrte~perc14_24, traffic)
+par(mfrow = c(2,2))
+plot(modfit2)
+summary(modfit2)
+
+modfit3 = lm(totfatrte~vehicmilespc, traffic)
+par(mfrow = c(2,2))
+plot(modfit3)
+summary(modfit3)
 
 ```
 
@@ -528,21 +283,13 @@ The $totfatrte$ is defined as fatalities per 100K population.
 ##2.2 Totfatrte Average
 What is the average of this variable in each of the years in the time period covered in this dataset?   
 ```{r}
-avg_by_year = dt%>%group_by
-qplot(x=year, y=totfatrte, data=avg_by_year)
+avg_by_year = aggregate(totfatrte~year, traffic, mean)
+qplot(x=year, y=totfatrte, data=avg_by_year) + geom_text(aes(label=round(totfatrte,1)),hjust=0, vjust=0)
 ```
 
-Over the years, we see a gradual decrease in the average $totfatrte$ variable - from a high of 25.49 in 1980 to a low of 16.73in 2004.  We do see two steep declines in the rate of fatalities (in the early 80's and then again between late 80's and early 90's),  since then we have only seen a gradual decrease.  It also appears like there are periods when we see an increase in the average fatality rate  (albeit small) mid-80's,  '92-'95 and 2002.  
-
-
+Over the years, we see a gradual decrease in the average $totfatrte$ variable - from a high of 25.49 in 1980 to a low of 16.73 in 2004.  We do see two steep declines in the rate of fatalities (in the early 80's and then again between late 80's and early 90's),  since then we have only seen a gradual decrease.  It also appears there are periods when we see an increase in the average fatality rate  (albeit small) mid-80's,  '92-'95 and 2002.  
 
 ##2.3 Totfatrte Regression  
-
-```{r}
-avg_by_year =aggregate(totfatrte~year, traffic, mean)
-
-```
-
 
 ###2.3.1 Modeling
 Estimate a very simple regression model of totfatrte on dummy variables for the years 1981 through 2004. 
@@ -551,18 +298,21 @@ lm.mod = lm(totfatrte~d81+d82+d83+d84+d85+d86+d87+d88+d89+
                       d90+d91+d92+d93+d94+d95+d96+d97+d98+d99+
                       d00+d01+d02+d03+d04, data=traffic)
 summary(lm.mod)
-
+mean(traffic$totfatrte[traffic$d80 == 1])
 ```
 
 ###2.3.2 Model Explanation
 What does this model explain? 
-The regression explains how  fatality rates in each year (averaged across the 48 states) has changed over time.
+
+The regression explains how the  fatality rate has changed (average across the 48 states) as compared to the year 1980.  For example, d04 has a coefficient of -8.766.  This implies that the average of $totfatrte$ was 8.8 less than 25.5 (average of $totfatrte$ in 1980) or 16.8, precisely what is reported in the graph above.
 
 ###2.3.3 Model Findings
 Describe what you find in this model. Did driving become safer over this period? Please provide a detailed explanation.  
+
 The fitted regression equation is $avg_fatality = 25.49 + (-1.824)\cdot d81+ (-4.552) \cdot d82 + \cdots + + (-8.766) \cdot d04 $  
-All the estimated coefficients are statistically significant at 5%, (except for the one for 1981, which suggests that there was a lot of variability in fatality rates across the 48 states in 1981). 
-The intercept of the regression model is the average fatality rate for 1980. All other coefficients measure how the average fatality compares for the year (represented by the dummy variable) versus 1980.  Each coefficients is negative, which means that the average fatality rate  each year has improved relative to 1980.  The coeff's are also increasingly negative for the most part - represting a trend that we see in the graph above.  *Based on this, we would say that driving (as measured by fatality rate per 100K population) has gotten safer over the years 1980-2004 on average in the United States.*  There are several caveats to that statement - we have not accounted for any other factors in this assessment; in addition the target variable $totfatrte$ is a simple average of the fatality rates of each state (not weighted by the population of each state).  
+All the estimated coefficients are statistically significant at 5%, except for the one for 1981, which suggests that there was a lot of variability in fatality rates across the 48 states in 1981. 
+
+The intercept of the regression model is the average fatality rate for 1980. All other coefficients measure how the average fatality compares for the year (represented by the dummy variable) versus 1980.  Each coefficient is negative, which means that the average fatality rate each year decreased relative to 1980.  The coefficients are also mostly increasingly negative, represting the negative trend that we see in the graph above.  *Based on this, we would say that driving (as measured by fatality rate per 100K population) has gotten safer over the years 1980-2004 on average in the United States.*  Note, we have not accounted for any other factors in this assessment.  The target variable $totfatrte$ is a simple average of the fatality rates of each state, which is not weighted by the population of each state, nor for the cumulative miles driven.  
 
 
 #Question 3
@@ -571,17 +321,6 @@ The intercept of the regression model is the average fatality rate for 1980. All
 
 ##3.1 Model Expansion
 Expand your model in Exercise 2 by adding variables bac08, bac10, perse, sbprim, sbsecon, sl70plus, gdl, perc14_24, unem, vehicmilespc, and perhaps transformations of some or all of these variables.
-
-
-
-
-
-##3.2 Rationale
-Please explain carefully your rationale, which should be based on your EDA, behind any transformation you made. If no transformation is made, explain why transformation is not needed. 
-
-In most instances we can expect there to be a lag between when certain types of laws are enacted and when they impact  change in behavior.  Given that, we suggest transforming the variables that are essentially binary in nature (whether a law was in effect or not) to be strictly binary (so if it was in effect for less than 1/2 the year, we will code is 0 and 1 otherwise).  
-
-As for the other variables - $perc14_24, unem, vehicmilespc$, they are all already expressed as normalized metrics (where the denominator is some measure of the population, either as per 100 people or per person).  Since our dependent variable is fatalities per 100K people; and the 
 
 ```{r}
 traffic$bac08bin = ifelse(traffic$bac08<0.5,0,1)
@@ -611,26 +350,38 @@ plot(lm.mod2)
 
 
 
+##3.2 Rationale
+Please explain carefully your rationale, which should be based on your EDA, behind any transformation you made. If no transformation is made, explain why transformation is not needed. 
+
+In most instances we can expect there to be a lag between when certain types of laws are enacted and when they impact  change in behavior.  Given that, we suggest transforming the variables that are essentially binary in nature (whether a law was in effect or not) to be strictly binary (so if it was in effect for less than 1/2 the year, we will code as 0 and 1 otherwise).  
+
+As for the other variables - $perc14_24, unem, vehicmilespc$, they are all already expressed as normalized metrics (where the denominator is some measure of the population, either as per 100 people or per person).  
+
+
 
 
 ##3.3 BAC
 ###3.3.1 Variable Definition
 How are the variables bac8 and bac10 defined?   
+
 The BAC (blood alcohol content) is a measure used to determine if someone is driving under the influence of alcohol.  For $bac10$ the threshold is 0.10 and $bac8$ represents a threshold of 0.08.  
 
 
 ###3.3.2 Coefficient Interpretation
 Interpret the coefficients on bac8 and bac10. 
-The coefficient on bac08 is -2.13 and the coefficient for bac10 is -1.12; The mathematical  interpretation of the coefficients in the regression would suggest that all else being equal, a state that has a threshold of 0.08 would have a lower $totfatrte$ than a state that has a threshold of 0.1 because the coeff for bac08 is -2.13 and the coeff for bac10 is -1.12.  But this model structure  also suggests that the effect of having BOTH thresholds (which is practically meaningless since having a threshold of 0.08 is inclusive of 0.1) is more than just having one of them - a nonsensical conclusion.  
+
+The coefficient on bac08 is -2.13 and the coefficient for bac10 is -1.12; The mathematical interpretation of the coefficients in the regression would suggest that all else being equal, a state that has a threshold of 0.08 would have a lower $totfatrte$ than a state that has a threshold of 0.1 because the coeff for bac08 is -2.13 and the coeff for bac10 is -1.12.  This model structure  also suggests that the effect of having neither of the thresholds implies an increase of the fatality rate by 3.25.
 
 ##3.4 Per Se Laws
 Do per se laws have a negative effect on the fatality rate? 
-According to the linear regression model - YES, perse laws have a negative effect on $totfatrte$. All else being equal, the existence of perse laws lowers $totfatrte$ by -6.12 compared to when these laws do not exist.  
+
+According to the linear regression model - YES, perse laws have a negative effect on $totfatrte$. All else being equal, the existence of perse laws lowers $totfatrte$ by -0.57 compared to when these laws do not exist.  
 
 
 ##3.5 Primary Seat Belt
 What about having a primary seat belt law? (Note that if a law was enacted sometime within a year the fraction of the year is recorded in place of the zero-one indicator.)
-Per the model specification, the coefficients for both seatbelt law types (primary and secondary) are not significantly different from zero, so we interpret it as having no effect on $totfatrte$.  
+
+Per the model specification, inclusion of the primary seatbelt variable $sbprimbin$ implies a reduction in fatalities by 0.0425. However, because the coefficient is not significantly different from zero, we interpret it as having no effect on $totfatrte$.  This does not imply that seatbelts do not affect fatality rates, just that compulsory laws may not change drivers' willingness to comply with the law.  
 
 
 
@@ -649,25 +400,13 @@ Reestimate the model from Exercise 3 using a fixed effects (at the state level) 
 
 
 ```{r}
-sum_by_year =aggregate(traffic[,c('bac08','bac10','sbprim','sbsecon','perse','sl70plus','gdl')], traffic['year'], FUN=sum)
-
-```
-
-
-
-State specific time-invariant variables:
-
-State specific time-variant variables:  
-1. 
-
-```{r}
 library(plm)
 
 
 plm.mod1 = plm(totfatrte~bac08bin+bac10bin+persebin+sbprimbin+sbseconbin+sl70plusbin+gdlbin+
                       perc14_24+unem+vehicmilespc + d81+d82+d83+d84+d85+d86+d87+d88+d89+
-                      d90+d91+d92+d93+d94+d95+d96+d97+d98+d99+
-                      d00+d01+d02+d03+d04, data=traffic, model=c("within"), index=c('state','year'), effect = )
+                      d90+d91+d92+d93+d94+d95+d96+d97+d98+d99+d00+d01+d02+d03+d04, 
+               data=traffic, model=c("within"), index=c('state','year'), effect = )
 summary(plm.mod1)
 ```
 
@@ -684,12 +423,17 @@ Both models explain about the same amount of variation in the $totfatrte$ variab
 ##4.4 Modeling Assumptions
 What assumptions are needed in each of these models? Are these assumptions reasonable in the current context?
 
+The fixed effect assumption is that the individual-specific effects are correlated with the independent variables.
+
+The pooled effects assumption (made in a random effects model) is that the individual-specific effects are uncorrelated with the independent variables. This is a very strong assumption and a difficult one to meet.  We are assuming there is no omitted variable bias and no correlation between same-state observations.  
 
 #Question 5
 ****************
 5. Would you prefer to use a random effects model instead of the fixed effects model you build in Exercise
 4? Why? Why not?
 ****************
+
+Random effects model would pool everything together and would rely on the assumption that same-state observations are independent.  While we have quite a few variables we could add to the mix, this isn't a realistic assumption to make.  We need to account for cultural/economic differences between states.  We are able to remove this omitted variable bias using fixed effects modeling with dummy variables of each year to explain the unaccounted for time-variant error dependence.
 
 #Question 6
 ****************
@@ -698,8 +442,14 @@ estimates, what is the estimated effect on totfatrte? Be sure to interpret the e
 to a layperson.
 ****************
 
+From the fixed-effects regression, the coefficient for the $vehicmilespc$ variable was 0.000942 fatalaties/100K people per mile-driven/capita.  This implies that for all other things held equal, an increase of 1,000 miles driven per capita would result in an increase of fatalaties per 0.942 fatalaties per 100K people.
+
 #Question 7
 ****************
 7. If there is serial correlation or heteroskedasticity in the idiosyncratic errors of the model, what would
 be the consequences on the coefficient estimates and their standard errors?
 ****************
+
+If there existed serial correlation in the model errors, we would be too liberal with our confidence intervals for estimations of the model parameters.  That is, we would commit Type I error, rejecting the null hypothesis too easily, saying that our variables are significant when they actually aren't.  
+
+Conversely, with the presence of heteroskedasticity in our error, we may commit Type II error, failing to reject the null hypothesis when it should be rejected, which means we do not detect the significance of a potentially valuable regressor.
