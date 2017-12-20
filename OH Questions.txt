@@ -1,0 +1,20 @@
+Can we account for both population and miles driven simultaneously?
+
+Does fixed effects model doesn't account for time-variant bias within changes, does it?  We're differencing both by state and time...
+
+	Safety of cars seems like an important one
+	Cultural norms (Mothers against drunk driving)
+
+Random effect assumes that unobserved effect is not correlated with regressors
+	
+What does it mean if we difference out the year, but still include it in the fixed effects model?
+
+What does heteroskedasticity do?  We know that serial/auto correlation means we reject the null hypothesis 
+too easily and that our model is too liberal.
+
+When we took the differences, seat belt became significant.  How do you explain this?  
+What might have been the omitted var bias?
+
+Two things we control for:
+	Autocorrelation in observations (random effects)
+	Unobserved effect -> Omitted Variable Bias (fixed effects)
